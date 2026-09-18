@@ -1,0 +1,611 @@
+/*
+  Animated to-do list: CSS only.
+  Works with your ORIGINAL zoo.html and zoo.js, no changes needed there.
+*/
+
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap");
+
+/* ---------- Colours and easing ---------- */
+:root {
+    --navy: #101664;
+    --ink: #171a45;
+    --soft: #d5daff;
+    --tangerine: #ff8a3d;
+    --pink: #ff5fa2;
+    --mint: #7fe3b5;
+    --danger: #ff5d73;
+
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+::selection {
+    background: var(--tangerine);
+    color: var(--ink);
+}
+
+:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: 3px;
+}
+
+
+/* =====================================================
+   BACKGROUND: slow colour shift + floating glows + stars
+   ===================================================== */
+html {
+    min-height: 100%;
+    background: linear-gradient(135deg, #1a2bb8, #4b2fd0, #2c3fdb, #1e58ff, #1a2bb8);
+    background-size: 400% 400%;
+    animation: bg-shift 22s ease-in-out infinite alternate;
+}
+
+@keyframes bg-shift {
+    from { background-position: 0% 50%; }
+    to   { background-position: 100% 50%; }
+}
+
+/* Three soft glows drifting around (no images needed) */
+html::before,
+html::after,
+body::before {
+    content: "";
+    position: fixed;
+    z-index: -1;
+    pointer-events: none;
+    border-radius: 50%;
+    will-change: transform;
+}
+
+html::before {
+    width: 55vmax;
+    height: 55vmax;
+    top: -18vmax;
+    left: -18vmax;
+    background: radial-gradient(circle, rgba(255, 138, 61, 0.5), transparent 65%);
+    animation: float-a 24s ease-in-out infinite;
+}
+
+html::after {
+    width: 60vmax;
+    height: 60vmax;
+    right: -22vmax;
+    bottom: -22vmax;
+    background: radial-gradient(circle, rgba(255, 95, 162, 0.45), transparent 65%);
+    animation: float-b 28s ease-in-out infinite;
+}
+
+body::before {
+    width: 42vmax;
+    height: 42vmax;
+    top: 30%;
+    right: -10vmax;
+    background: radial-gradient(circle, rgba(60, 180, 255, 0.35), transparent 65%);
+    animation: float-c 32s ease-in-out infinite;
+}
+
+@keyframes float-a {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50%      { transform: translate(14vw, 12vh) scale(1.25); }
+}
+
+@keyframes float-b {
+    0%, 100% { transform: translate(0, 0) scale(1.1); }
+    50%      { transform: translate(-16vw, -10vh) scale(0.9); }
+}
+
+@keyframes float-c {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50%      { transform: translate(-20vw, 14vh) scale(1.3); }
+}
+
+/* Twinkling dots that slowly drift */
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+        radial-gradient(circle, #fff 0 1.2px, transparent 1.8px),
+        radial-gradient(circle, rgba(255, 255, 255, 0.8) 0 1px, transparent 1.6px);
+    background-size: 90px 90px, 140px 140px;
+    background-position: 0 0, 45px 70px;
+    animation:
+        twinkle 5s ease-in-out infinite alternate,
+        drift 80s linear infinite;
+}
+
+@keyframes twinkle {
+    from { opacity: 0.2; }
+    to   { opacity: 0.65; }
+}
+
+@keyframes drift {
+    to { background-position: 90px 90px, 185px 210px; }
+}
+
+
+/* =====================================================
+   PAGE LAYOUT
+   h1 on top, input + button side by side, list below.
+   ===================================================== */
+body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 0.75rem;
+    align-content: start;
+    max-width: 36rem;
+    min-height: 100vh;
+    margin: 0 auto;
+    padding: clamp(2rem, 7vw, 4.5rem) 1.25rem 4rem;
+    color: #fff;
+    font-family: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+
+/* =====================================================
+   TITLE: drops in, then a highlight glides across it
+   ===================================================== */
+h1 {
+    grid-column: 1 / -1;
+    justify-self: start;
+    margin: 0 0 1.6rem;
+    font-size: clamp(2.8rem, 10vw, 4.4rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+
+    background: linear-gradient(100deg, #fff 0%, #ffc9a0 25%, #fff 50%, #ffc9a0 75%, #fff 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+
+    animation:
+        title-in 0.9s var(--ease-out) backwards,
+        shimmer 7s linear 1s infinite;
+}
+
+@keyframes title-in {
+    from {
+        opacity: 0;
+        transform: translateY(-26px) scale(0.94);
+        letter-spacing: 0.08em;
+        filter: blur(10px);
+    }
+}
+
+@keyframes shimmer {
+    to { background-position: 200% 0; }
+}
+
+@keyframes rise {
+    from {
+        opacity: 0;
+        transform: translateY(22px);
+    }
+}
+
+
+/* =====================================================
+   INPUT: glows, lifts and draws an underline on focus
+   ===================================================== */
+input {
+    grid-column: 1;
+    min-width: 0;
+    padding: 1rem 1.2rem;
+    border: 1.5px solid rgba(255, 255, 255, 0.32);
+    border-radius: 16px;
+    outline: none;
+    caret-color: var(--tangerine);
+
+    font: inherit;
+    font-size: 1.05rem;
+    color: #fff;
+
+    background-color: rgba(16, 22, 100, 0.4);
+    background-image: linear-gradient(90deg, var(--tangerine), var(--pink), var(--mint));
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 0% 3px;
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+
+    transition:
+        background-color 0.3s,
+        background-size 0.5s var(--ease-out),
+        border-color 0.3s,
+        box-shadow 0.4s var(--ease-out),
+        transform 0.4s var(--ease-spring);
+    animation: rise 0.7s var(--ease-out) 0.15s backwards;
+}
+
+input::placeholder {
+    color: rgba(255, 255, 255, 0.72);
+    transition: opacity 0.3s;
+}
+
+input:focus {
+    border-color: #fff;
+    background-color: rgba(16, 22, 100, 0.6);
+    background-size: 100% 3px;
+    box-shadow:
+        0 0 0 4px rgba(255, 138, 61, 0.45),
+        0 14px 34px rgba(8, 12, 70, 0.4);
+    transform: translateY(-2px);
+}
+
+input:focus::placeholder {
+    opacity: 0.35;
+}
+
+
+/* =====================================================
+   ADD BUTTON
+   - dimmed (and unclickable) while the input is empty
+   - lights up and pulses a ring once you type
+   - shine sweeps across on hover
+   ===================================================== */
+input + button {
+    grid-column: 2;
+    position: relative;
+    padding: 0 1.5rem;
+    border: 0;
+    border-radius: 16px;
+
+    font: inherit;
+    font-weight: 700;
+    color: var(--ink);
+    cursor: pointer;
+
+    background-image:
+        linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.7) 50%, transparent 60%),
+        linear-gradient(135deg, #ffb15c, #ff7a45 55%, #ff5fa2);
+    background-size: 300% 100%, 100% 100%;
+    background-position: 100% 0, 0 0;
+    background-repeat: no-repeat;
+    box-shadow:
+        0 8px 20px rgba(255, 100, 60, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+
+    transition:
+        transform 0.35s var(--ease-spring),
+        box-shadow 0.35s var(--ease-out),
+        opacity 0.3s,
+        filter 0.3s,
+        background-position 0s;
+    animation: rise 0.7s var(--ease-out) 0.3s backwards;
+}
+
+/* Pulsing ring (only visible when ready) */
+input + button::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 2px solid var(--tangerine);
+    border-radius: 22px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Empty input: button looks and acts disabled */
+input:placeholder-shown + button {
+    opacity: 0.5;
+    filter: saturate(0.5);
+    box-shadow: none;
+    pointer-events: none;
+}
+
+/* Something typed: button glows and the ring pulses */
+input:not(:placeholder-shown) + button {
+    box-shadow:
+        0 10px 28px rgba(255, 110, 70, 0.55),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+input:not(:placeholder-shown) + button::before {
+    animation: ring 1.6s ease-out infinite;
+}
+
+@keyframes ring {
+    0%   { inset: 0;     opacity: 0.9; }
+    100% { inset: -10px; opacity: 0; }
+}
+
+input:not(:placeholder-shown) + button:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow:
+        0 16px 34px rgba(255, 110, 70, 0.6),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    background-position: 0 0, 0 0;
+    transition:
+        transform 0.35s var(--ease-spring),
+        box-shadow 0.35s var(--ease-out),
+        opacity 0.3s,
+        filter 0.3s,
+        background-position 0.9s var(--ease-out);
+}
+
+input:not(:placeholder-shown) + button:active {
+    transform: translateY(1px) scale(0.95);
+}
+
+
+/* =====================================================
+   TASK LIST
+   ===================================================== */
+ul {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    margin: 2.25rem 0 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: task; /* used for the "N tasks" label below */
+}
+
+li {
+    counter-increment: task;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.9rem 0.9rem 0.9rem 1.2rem;
+    border: 1px solid rgba(255, 255, 255, 0.26);
+    border-radius: 18px;
+
+    font-size: 1.1rem;
+    font-weight: 500;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+    text-shadow: 0 1px 2px rgba(10, 15, 80, 0.35);
+
+    /* layer 1: shine stripe, layer 2: glass sheen, plus a navy tint underneath */
+    background-color: rgba(16, 22, 100, 0.4);
+    background-image:
+        linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.28) 50%, transparent 60%),
+        linear-gradient(120deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05));
+    background-size: 300% 100%, 100% 100%;
+    background-position: 100% 0, 0 0;
+    background-repeat: no-repeat;
+    box-shadow:
+        0 10px 28px rgba(8, 12, 70, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.28);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+
+    transition:
+        transform 0.4s var(--ease-spring),
+        box-shadow 0.4s var(--ease-out),
+        border-color 0.3s,
+        background-color 0.3s,
+        opacity 0.3s,
+        background-position 0s;
+    animation: pop-in 0.7s var(--ease-spring) backwards;
+}
+
+/* The first two tasks appear one after another on page load */
+li:nth-child(1) { animation-delay: 0.4s; }
+li:nth-child(2) { animation-delay: 0.52s; }
+
+@keyframes pop-in {
+    from {
+        opacity: 0;
+        transform: translateY(26px) scale(0.9) rotate(-1.5deg);
+    }
+}
+
+/* Pulsing status dot */
+li::before {
+    content: "";
+    flex: none;
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--mint), #4fd1c5);
+    animation: dot-pulse 2.4s ease-out infinite;
+}
+
+li:nth-child(even)::before {
+    animation-delay: -1.2s; /* so the dots don't all pulse together */
+}
+
+@keyframes dot-pulse {
+    0%       { box-shadow: 0 0 0 0 rgba(127, 227, 181, 0.7); }
+    70%, 100% { box-shadow: 0 0 0 10px rgba(127, 227, 181, 0); }
+}
+
+/* Accent bar that grows up the left edge on hover */
+li::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 18%;
+    bottom: 18%;
+    width: 4px;
+    border-radius: 4px;
+    background: linear-gradient(var(--tangerine), var(--pink));
+    transform: scaleY(0);
+    transition: transform 0.45s var(--ease-spring);
+}
+
+/* Hover: slide right, shine sweeps across, bar grows */
+li:hover {
+    transform: translateX(8px) scale(1.015);
+    border-color: rgba(255, 255, 255, 0.6);
+    box-shadow:
+        0 18px 40px rgba(8, 12, 70, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    background-position: 0 0, 0 0;
+    transition:
+        transform 0.4s var(--ease-spring),
+        box-shadow 0.4s var(--ease-out),
+        border-color 0.3s,
+        background-color 0.3s,
+        opacity 0.3s,
+        background-position 1s var(--ease-out);
+}
+
+li:hover::after {
+    transform: scaleY(1);
+}
+
+
+/* =====================================================
+   DELETE BUTTON
+   ===================================================== */
+.delete {
+    flex: none;
+    margin-left: auto;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid rgba(255, 255, 255, 0.38);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1);
+
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: capitalize;
+    text-shadow: none;
+    color: #fff;
+    cursor: pointer;
+
+    transition:
+        background-color 0.25s,
+        border-color 0.25s,
+        color 0.25s,
+        transform 0.35s var(--ease-spring),
+        box-shadow 0.3s;
+}
+
+.delete:hover {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: var(--ink);
+    transform: scale(1.1);
+    box-shadow: 0 8px 18px rgba(255, 93, 115, 0.5);
+    animation: wiggle 0.5s ease-in-out;
+}
+
+.delete:active {
+    transform: scale(0.92);
+}
+
+@keyframes wiggle {
+    20% { transform: rotate(-9deg) scale(1.1); }
+    40% { transform: rotate(7deg) scale(1.1); }
+    60% { transform: rotate(-5deg) scale(1.1); }
+    80% { transform: rotate(3deg) scale(1.1); }
+}
+
+/* While hovering "delete", the whole row warns you it's about to go */
+li:has(.delete:hover) {
+    transform: translateX(-4px) scale(0.985);
+    border-color: rgba(255, 140, 155, 0.8);
+    background-color: rgba(255, 93, 115, 0.3);
+}
+
+li:has(.delete:hover)::before {
+    background: var(--danger);
+    animation: none;
+    box-shadow: 0 0 0 4px rgba(255, 93, 115, 0.4);
+}
+
+li:has(.delete:hover)::after {
+    background: var(--danger);
+}
+
+/* While pressing it, the row shrinks and fades */
+li:has(.delete:active) {
+    transform: scale(0.9);
+    opacity: 0.4;
+}
+
+
+/* =====================================================
+   TASK COUNT + EMPTY STATE (both made with CSS counters)
+   ===================================================== */
+ul::after {
+    content: counter(task) " tasks";
+    align-self: flex-start;
+    margin-top: 0.5rem;
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--soft);
+    animation: fade-up 0.6s var(--ease-out) backwards;
+}
+
+ul:has(> li:only-child)::after {
+    content: counter(task) " task";
+}
+
+/* No tasks left: show a friendly floating message */
+ul:not(:has(> li))::after {
+    content: "Nothing to do yet. Type a task above and press Add.";
+    align-self: stretch;
+    margin-top: 0;
+    padding: 2.2rem 1rem;
+    border: 2px dashed rgba(255, 255, 255, 0.45);
+    border-radius: 18px;
+    background: transparent;
+    text-align: center;
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: #fff;
+    animation:
+        fade-up 0.6s var(--ease-out) backwards,
+        breathe 3.2s ease-in-out infinite;
+}
+
+@keyframes fade-up {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+}
+
+@keyframes breathe {
+    0%, 100% { transform: translateY(0); opacity: 0.85; }
+    50%      { transform: translateY(-6px); opacity: 1; }
+}
+
+
+/* =====================================================
+   SMALL SCREENS
+   ===================================================== */
+@media (max-width: 400px) {
+    input + button {
+        padding: 0 1rem;
+    }
+
+    li {
+        padding-left: 1rem;
+    }
+}
+
+
+/* =====================================================
+   RESPECT "REDUCE MOTION" SETTINGS
+   ===================================================== */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-delay: 0ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
